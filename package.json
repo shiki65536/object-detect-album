@@ -1,0 +1,18 @@
+{
+  "name": "fit5225-group3-assignment3",
+  "version": "1.0.0",
+  "description": "",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.332.0",
+    "@aws-sdk/lib-dynamodb": "^3.332.0",
+    "bcrypt": "^5.1.0",
+    "crypto": "^1.0.1",
+    "express": "^4.18.2",
+    "parse-multipart": "^1.0.4",
+    "serverless-http": "^3.1.1",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "serverless-offline": "^12.0.4"
+  }
+}
