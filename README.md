@@ -1,9 +1,11 @@
 🖼️ object detect album
 ![framework](https://i.imgur.com/8ah2M8c.png)
 
+Upload your photo and the system will automatically detect the object.
+
 ## SYSTEM ARCHITECTURE
 
-The system is composed of several key components - Lambda, AWS Cognito, Amazon DynamoDB, API Gateway, and S3 - that collaboratively work to deliver the desired functionality. By harnessing the power of these components, the system facilitates user authentication, efficient request routing, secure image storage, and proficient data management. This strategic integration ultimately culminates in a seamless and dependable user experience.
+The system is composed of several key components - Lambda, AWS Cognito, Amazon DynamoDB, API Gateway, and S3 - that collaboratively work to deliver the desired functionality.
 
 ## WEBSITE
 
