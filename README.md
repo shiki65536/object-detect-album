@@ -1,6 +1,6 @@
 🖼️ object detect album
 ![framework](https://i.imgur.com/8ah2M8c.png)
-![app]([https://i.imgur.com/8ah2M8c.png](https://shiki65536.github.io/img/posts/object-detect.gif))
+![app](https://shiki65536.github.io/img/posts/object-detect.gif))
 
 Upload your photo and the system will automatically detect the object.
 
