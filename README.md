@@ -5,6 +5,7 @@
 A cloud-native photo album that automatically detects objects in uploaded images using YOLO object detection and enables searching by image content instead of manually organising photos.
 
 ![framework](https://i.imgur.com/8ah2M8c.png)
+![app](https://shiki65536.github.io/img/posts/object-detect.gif))
 
 ## Overview
 
