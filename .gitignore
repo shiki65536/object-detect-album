@@ -1,0 +1,99 @@
+# =========================
+# Node.js
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Build output
+build/
+dist/
+coverage/
+
+# =========================
+# Serverless
+# =========================
+.serverless/
+.serverless_plugins/
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+.venv/
+venv/
+env/
+
+.pytest_cache/
+.mypy_cache/
+
+# =========================
+# AWS
+# =========================
+.aws-sam/
+.aws/
+
+# Credentials
+.env
+.env.*
+!.env.example
+
+# =========================
+# Docker
+# =========================
+.docker/
+
+# =========================
+# YOLO Models
+# =========================
+*.weights
+*.pt
+*.onnx
+*.engine
+
+# If you only want to ignore YOLO weights:
+# object_detection/yolo_tiny_configs/*.weights
+
+# =========================
+# macOS
+# =========================
+.DS_Store
+.AppleDouble
+.LSOverride
+
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/
+
+*.swp
+*.swo
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# Misc
+# =========================
+tmp/
+temp/
+
+# React env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

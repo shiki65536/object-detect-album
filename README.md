@@ -1,36 +1,128 @@
-🖼️ object detect album
+# Object Detect Album
+
+**Live Demo:** https://d3vz5yv0yzzzcd.cloudfront.net/
+
+A cloud-native photo album that automatically detects objects in uploaded images using YOLO object detection and enables searching by image content instead of manually organising photos.
+
 ![framework](https://i.imgur.com/8ah2M8c.png)
 
-Upload your photo and the system will automatically detect the object.
+## Overview
 
-## SYSTEM ARCHITECTURE
+Object Detect Album allows users to:
 
-The system is composed of several key components - Lambda, AWS Cognito, Amazon DynamoDB, API Gateway, and S3 - that collaboratively work to deliver the desired functionality.
+- Sign up and authenticate with Email or Google OAuth
+- Upload personal images securely
+- Automatically generate object tags using YOLOv3-Tiny
+- Edit or manage generated tags
+- Search images by tags
+- Search similar images using another image
 
-## WEBSITE
+The application demonstrates an event-driven serverless architecture on AWS.
 
-After registration, login with your new account to access the system's features. To sign out, click on the profile at the upper right and select Logout.
-Note that without logging in, you cannot access the homepage or use any system functions.
+## Architecture
 
-Once logged in, you will be directed to the home page. This page displays all the images you have uploaded along with their corresponding tags.
+### Frontend
 
-## UPLOAD FUNCTION
+- React
+- TypeScript
+- Ant Design
+- CloudFront + S3 Static Hosting
 
-To upload an image, simply click on the designated button. It's important to note that the system only supports the upload of one image at a time.
+### Backend
 
-## EDIT FUNCTION
+- API Gateway
+- AWS Lambda (Node.js)
+- AWS Lambda Container Image (Python + OpenCV + YOLOv3-Tiny)
+- Amazon DynamoDB
+- Amazon S3
+- Amazon Cognito
 
-If you wish to modify the tag description of an image, click on the respective tag. This will allow you to edit the tag and count according to your preference.
+### Authentication
 
-## DELETE FUNCTION
+- Email / Password Login
+- Google OAuth Login
+- JWT Authorization via Cognito User Pool
 
-When you decide to remove an image from the system, simply click on the delete link. This action will prompt the deletion process.
+## Workflow
 
-## SEARCH BY TAG FUNCTION
+### Image Upload
 
-To search for images with similar tags, enter a specific tag followed by a count in the format "tag:count" in the search field. The system will retrieve and display all relevant images.
+1. User uploads an image
+2. Image is stored in Amazon S3
+3. S3 event triggers Object Detection Lambda
+4. YOLO detects objects inside the image
+5. Tags are stored in DynamoDB
+6. Frontend automatically refreshes and displays results
 
-## SEARCH BY IMAGE FUNCTION
+### Image Search
 
-For a more advanced search capability, you can upload an image to find similar images within the system.
-This feature utilises image recognition technology to provide accurate results.
+1. User uploads a query image
+2. Object Detection Lambda extracts tags
+3. Search Lambda compares detected tags against stored images
+4. Matching images are returned
+
+## Features
+
+### Automatic Object Detection
+
+Detects common objects using YOLOv3-Tiny running inside a Lambda Container Image.
+
+Examples:
+
+- person
+- dog
+- cat
+- car
+- bottle
+- cup
+- chair
+
+### Tag Management
+
+Users can:
+
+- Edit tags
+- Adjust tag counts
+- Add custom tags
+- Delete tags
+
+### Search by Tag
+
+Example:
+
+person:1,dog:1
+
+Returns images containing at least one person and one dog.
+
+### Search by Image
+
+Upload an image and retrieve visually similar photos based on detected object composition.
+
+## AWS Services Used
+
+- Amazon S3
+- Amazon CloudFront
+- Amazon Cognito
+- AWS Lambda
+- AWS Lambda Container Images
+- Amazon DynamoDB
+- Amazon API Gateway
+- Amazon ECR
+- CloudWatch
+
+## Key Engineering Challenges
+
+- Migrating legacy Lambda Layers to Lambda Container Images for YOLO deployment
+- Integrating Cognito User Pools with Google OAuth
+- Handling CORS across CloudFront, API Gateway and Cognito
+- Managing large OpenCV dependencies within Lambda runtime limits
+- Building an event-driven image processing pipeline
+
+## Future Improvements
+
+- Semantic image search using CLIP embeddings
+- Face clustering and person recognition
+- Bulk image upload
+- Pagination and lazy loading
+- Mobile-friendly UI
+- Infrastructure as Code refinements
