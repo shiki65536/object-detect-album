@@ -1,0 +1,394 @@
+* {
+  box-sizing: border-box;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+.auth-shell,
+.app-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.20), transparent 32rem),
+    radial-gradient(circle at top right, rgba(14, 165, 233, 0.16), transparent 30rem),
+    #f8fafc;
+  color: #0f172a;
+}
+
+.auth-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
+  gap: 24px;
+  padding: 48px;
+  align-items: center;
+}
+
+.hero-card,
+.auth-card,
+.control-panel,
+.search-panel,
+.empty-state,
+.image-card,
+.modal-card {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(18px);
+  border-radius: 28px;
+}
+
+.hero-card {
+  padding: 48px;
+}
+
+.badge,
+.eyebrow,
+.usage-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.hero-card h1,
+.topbar h1 {
+  margin: 18px 0 14px;
+  font-size: clamp(40px, 6vw, 76px);
+  line-height: 0.94;
+  letter-spacing: -0.07em;
+}
+
+.hero-card p,
+.control-panel p,
+.empty-state p {
+  color: #475569;
+  font-size: 18px;
+  max-width: 780px;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 36px;
+}
+
+.hero-grid div {
+  padding: 18px;
+  background: #f8fafc;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+}
+
+.hero-grid strong,
+.hero-grid span {
+  display: block;
+}
+
+.hero-grid span {
+  color: #64748b;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.auth-card {
+  padding: 28px;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 4px;
+  border-radius: 16px;
+  background: #f1f5f9;
+  margin-bottom: 20px;
+}
+
+.tabs button {
+  padding: 12px;
+  border-radius: 12px;
+  background: transparent;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.tabs button.active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  margin-bottom: 14px;
+  color: #334155;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+input {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 13px 14px;
+  color: #0f172a;
+  outline: none;
+}
+
+input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
+}
+
+.primary,
+.secondary,
+.google,
+.ghost {
+  min-height: 42px;
+  border-radius: 14px;
+  padding: 10px 16px;
+  font-weight: 800;
+}
+
+.primary {
+  background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+  color: #ffffff;
+  box-shadow: 0 14px 35px rgba(79, 70, 229, 0.24);
+}
+
+.secondary {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.google {
+  width: 100%;
+  margin-top: 12px;
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.ghost {
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+}
+
+.danger {
+  color: #dc2626;
+}
+
+.status,
+.notice,
+.loading {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fff7ed;
+  color: #9a3412;
+  text-align: left;
+}
+
+.app-shell {
+  padding: 32px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.topbar h1 {
+  font-size: clamp(36px, 5vw, 58px);
+}
+
+.topbar-actions,
+.button-row,
+.search-panel,
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.control-panel {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.control-panel h2 {
+  margin: 0 0 8px;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.search-panel {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.search-panel input {
+  max-width: 420px;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.image-card {
+  overflow: hidden;
+}
+
+.image-card img {
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+  display: block;
+  background: #e2e8f0;
+}
+
+.card-body {
+  padding: 16px;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 34px;
+  margin-bottom: 14px;
+}
+
+.tag-list span,
+.tips span {
+  border-radius: 999px;
+  background: #ecfeff;
+  color: #0e7490;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.empty-state {
+  margin-top: 22px;
+  padding: 44px;
+  text-align: center;
+}
+
+.empty-state .orb {
+  width: 84px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 18px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #e0e7ff, #cffafe);
+  font-size: 38px;
+}
+
+.empty-state p {
+  margin: 0 auto 18px;
+}
+
+.tips {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.42);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 20;
+}
+
+.modal-card {
+  width: min(720px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  padding: 24px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.modal-image {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: 18px;
+  background: #f1f5f9;
+  margin: 16px 0;
+}
+
+.tag-editor {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.tag-row {
+  display: grid;
+  grid-template-columns: 1fr 120px auto;
+  gap: 10px;
+}
+
+@media (max-width: 860px) {
+  .auth-shell {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  .hero-grid,
+  .control-panel,
+  .topbar {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .app-shell {
+    padding: 18px;
+  }
+
+  .tag-row {
+    grid-template-columns: 1fr;
+  }
+}

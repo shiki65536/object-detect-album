@@ -1,0 +1,717 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import "./App.css";
+import {
+  clearSession,
+  confirmUser,
+  getAccessToken,
+  getGoogleLoginUrl,
+  loginWithEmail,
+  parseCognitoCallback,
+  registerUser,
+} from "./auth";
+import {
+  deleteImage,
+  fetchImages,
+  findSimilarByImage,
+  searchByTags,
+  updateTags,
+  uploadImage,
+} from "./api";
+import { CONFIG } from "./config";
+import type { AlbumImage, AuthView, TagMap } from "./types";
+
+const passwordPattern =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
+function validateImage(file: File) {
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+  const isImage = allowedTypes.includes(file.type);
+  const isSmallEnough = file.size / 1024 / 1024 < CONFIG.maxImageSizeMb;
+
+  if (!isImage) {
+    return "Please select a JPG or PNG image.";
+  }
+
+  if (!isSmallEnough) {
+    return `Image must be smaller than ${CONFIG.maxImageSizeMb}MB.`;
+  }
+
+  return "";
+}
+
+function parseTagQuery(query: string) {
+  return query.split(",").reduce<TagMap>((result, pair) => {
+    const [rawName, rawCount] = pair.split(":");
+    const name = rawName?.trim().toLowerCase();
+    const count = Number.parseInt(rawCount || "1", 10);
+
+    if (name) {
+      result[name] = Number.isNaN(count) ? 1 : count;
+    }
+
+    return result;
+  }, {});
+}
+
+function AuthPanel({ onAuthenticated }: { onAuthenticated: () => void }) {
+  const [view, setView] = useState<AuthView>("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [givenName, setGivenName] = useState("");
+  const [familyName, setFamilyName] = useState("");
+  const [code, setCode] = useState("");
+  const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleLogin() {
+    setStatus("");
+    setLoading(true);
+    try {
+      await loginWithEmail(email, password);
+      onAuthenticated();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Login failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRegister() {
+    setStatus("");
+
+    if (!passwordPattern.test(password)) {
+      setStatus(
+        "Password must include uppercase, lowercase, number, symbol, and be at least 8 characters.",
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await registerUser(email, password, givenName, familyName);
+      setView("confirm");
+      setStatus(
+        "Registration successful. Check your email for the verification code.",
+      );
+    } catch (error) {
+      setStatus(
+        error instanceof Error ? error.message : "Registration failed.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleConfirm() {
+    setStatus("");
+    setLoading(true);
+    try {
+      await confirmUser(email, code);
+      setView("login");
+      setStatus("Email confirmed. You can login now.");
+    } catch (error) {
+      setStatus(
+        error instanceof Error ? error.message : "Confirmation failed.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="auth-shell">
+      <section className="hero-card">
+        <div className="badge">YOLOv3-Tiny · AWS Serverless · Cognito</div>
+        <h1>Object Detect Album</h1>
+        <p>
+          Upload photos, let the backend detect objects automatically, and
+          search your album by visual content instead of filenames.
+        </p>
+        <div className="hero-grid">
+          <div>
+            <strong>Auto tagging</strong>
+            <span>
+              S3 events trigger object detection and store tags in DynamoDB.
+            </span>
+          </div>
+          <div>
+            <strong>Image search</strong>
+            <span>
+              Use a reference image to find photos with similar detected
+              objects.
+            </span>
+          </div>
+          <div>
+            <strong>Secure demo</strong>
+            <span>
+              Email/password and Google OAuth are protected by Cognito JWTs.
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section className="auth-card">
+        <div className="tabs">
+          <button
+            className={view === "login" ? "active" : ""}
+            onClick={() => setView("login")}
+          >
+            Login
+          </button>
+          <button
+            className={view === "register" ? "active" : ""}
+            onClick={() => setView("register")}
+          >
+            Register
+          </button>
+        </div>
+
+        {view !== "confirm" && (
+          <>
+            <label>
+              Email
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="you@example.com"
+              />
+            </label>
+            <label>
+              Password
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Uppercase, lowercase, number, symbol"
+              />
+            </label>
+          </>
+        )}
+
+        {view === "register" && (
+          <>
+            <label>
+              Given name
+              <input
+                value={givenName}
+                onChange={(event) => setGivenName(event.target.value)}
+                placeholder="Given name"
+              />
+            </label>
+            <label>
+              Family name
+              <input
+                value={familyName}
+                onChange={(event) => setFamilyName(event.target.value)}
+                placeholder="Family name"
+              />
+            </label>
+          </>
+        )}
+
+        {view === "confirm" && (
+          <>
+            <label>
+              Verification code
+              <input
+                value={code}
+                onChange={(event) => setCode(event.target.value)}
+                placeholder="6-digit code"
+              />
+            </label>
+            <button
+              className="primary"
+              disabled={loading}
+              onClick={handleConfirm}
+            >
+              Confirm email
+            </button>
+          </>
+        )}
+
+        {view === "login" && (
+          <button className="primary" disabled={loading} onClick={handleLogin}>
+            Login
+          </button>
+        )}
+        {view === "register" && (
+          <button
+            className="primary"
+            disabled={loading}
+            onClick={handleRegister}
+          >
+            Create account
+          </button>
+        )}
+
+        {view === "login" && (
+          <button
+            className="google"
+            onClick={() => {
+              window.location.href = getGoogleLoginUrl();
+            }}
+          >
+            Continue with Google
+          </button>
+        )}
+
+        {status && <p className="status">{status}</p>}
+        <div
+          style={{
+            marginTop: 16,
+            padding: 12,
+            borderRadius: 8,
+            background: "#f6f8fa",
+            fontSize: 13,
+          }}
+        >
+          <strong>Demo account</strong>
+          <div>
+            Email: <code>shiki65536@gmail.com</code>
+          </div>
+          <div>
+            Password: <code>Qwer1234~</code>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function EmptyState({ onUpload }: { onUpload: () => void }) {
+  return (
+    <section className="empty-state">
+      <div className="orb">🖼️</div>
+      <h2>Your AI photo album is ready.</h2>
+      <p>
+        Upload your first image and the system will detect objects, generate
+        searchable tags, and organise your album by what appears inside each
+        photo.
+      </p>
+      <div className="tips">
+        <span>Try pets</span>
+        <span>food</span>
+        <span>people</span>
+        <span>bottles</span>
+        <span>cars</span>
+      </div>
+      <button className="primary" onClick={onUpload}>
+        Upload your first photo
+      </button>
+    </section>
+  );
+}
+
+function TagEditor({
+  image,
+  onClose,
+  onSave,
+}: {
+  image: AlbumImage;
+  onClose: () => void;
+  onSave: (image: AlbumImage) => void;
+}) {
+  const [tags, setTags] = useState<TagMap[]>(image.tags || []);
+
+  function updateName(index: number, nextName: string) {
+    setTags((current) =>
+      current.map((tag, itemIndex) => {
+        if (itemIndex !== index) {
+          return tag;
+        }
+        const oldName = Object.keys(tag)[0];
+        return { [nextName]: tag[oldName] || 0 };
+      }),
+    );
+  }
+
+  function updateCount(index: number, nextCount: number) {
+    setTags((current) =>
+      current.map((tag, itemIndex) => {
+        if (itemIndex !== index) {
+          return tag;
+        }
+        const name = Object.keys(tag)[0];
+        return { [name]: nextCount };
+      }),
+    );
+  }
+
+  function removeTag(index: number) {
+    setTags((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  }
+
+  return (
+    <div className="modal-backdrop">
+      <section className="modal-card">
+        <div className="modal-header">
+          <h2>Edit tags</h2>
+          <button className="ghost" onClick={onClose}>
+            Close
+          </button>
+        </div>
+        <img
+          className="modal-image"
+          src={image.link}
+          alt="Selected album item"
+        />
+        <div className="tag-editor">
+          {tags.map((tag, index) => {
+            const name = Object.keys(tag)[0];
+            return (
+              <div className="tag-row" key={`${name}-${index}`}>
+                <input
+                  value={name}
+                  onChange={(event) => updateName(index, event.target.value)}
+                  placeholder="tag"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  value={tag[name]}
+                  onChange={(event) =>
+                    updateCount(
+                      index,
+                      Number.parseInt(event.target.value || "0", 10),
+                    )
+                  }
+                />
+                <button
+                  className="danger ghost"
+                  onClick={() => removeTag(index)}
+                >
+                  Delete
+                </button>
+              </div>
+            );
+          })}
+        </div>
+        <button
+          className="secondary"
+          onClick={() => setTags((current) => [...current, { "": 0 }])}
+        >
+          Add tag
+        </button>
+        <button className="primary" onClick={() => onSave({ ...image, tags })}>
+          Save tags
+        </button>
+      </section>
+    </div>
+  );
+}
+
+function AlbumPage({ onLogout }: { onLogout: () => void }) {
+  const [images, setImages] = useState<AlbumImage[]>([]);
+  const [visibleImages, setVisibleImages] = useState<AlbumImage[]>([]);
+  const [selectedImage, setSelectedImage] = useState<AlbumImage | null>(null);
+  const [query, setQuery] = useState("");
+  const [notice, setNotice] = useState("");
+  const [loading, setLoading] = useState(false);
+  const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  const similarInputRef = useRef<HTMLInputElement | null>(null);
+
+  const imageCountLabel = useMemo(
+    () => `${images.length}/${CONFIG.maxAlbumImages} demo images`,
+    [images.length],
+  );
+
+  async function loadImages() {
+    setLoading(true);
+    setNotice("");
+    try {
+      const data = await fetchImages();
+      setImages(data);
+      setVisibleImages(data);
+    } catch {
+      setNotice(
+        "Unable to load your album. Please refresh or try again later.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadImages();
+  }, []);
+
+  async function handleUpload(file: File | undefined) {
+    if (!file) {
+      return;
+    }
+
+    const validationError = validateImage(file);
+    if (validationError) {
+      setNotice(validationError);
+      return;
+    }
+
+    if (images.length >= CONFIG.maxAlbumImages) {
+      setNotice("Demo limit reached. Delete an image before uploading more.");
+      return;
+    }
+
+    setLoading(true);
+    setNotice(
+      "Uploading image. Object detection will generate tags shortly...",
+    );
+    try {
+      await uploadImage(file);
+      await new Promise((resolve) => window.setTimeout(resolve, 3500));
+      await loadImages();
+      setNotice(
+        "Upload completed. Tags are ready or still processing in the background.",
+      );
+    } catch {
+      setNotice("Upload failed. Please try a smaller JPG or PNG image.");
+    } finally {
+      setLoading(false);
+      if (uploadInputRef.current) {
+        uploadInputRef.current.value = "";
+      }
+    }
+  }
+
+  async function handleFindSimilar(file: File | undefined) {
+    if (!file) {
+      return;
+    }
+
+    const validationError = validateImage(file);
+    if (validationError) {
+      setNotice(validationError);
+      return;
+    }
+
+    setLoading(true);
+    setNotice("Detecting objects in the reference image...");
+    try {
+      const results = await findSimilarByImage(file);
+      setVisibleImages(results);
+      setNotice(
+        results.length
+          ? "Similar image search completed."
+          : "No similar images found yet.",
+      );
+    } catch {
+      setNotice("Similar image search failed. Please try again.");
+    } finally {
+      setLoading(false);
+      if (similarInputRef.current) {
+        similarInputRef.current.value = "";
+      }
+    }
+  }
+
+  async function handleTagSearch() {
+    if (!query.trim()) {
+      setVisibleImages(images);
+      return;
+    }
+
+    if (!query.includes(":")) {
+      setNotice("Use format like dog:1,person:2");
+      return;
+    }
+
+    setLoading(true);
+    setNotice("Searching by tags...");
+    try {
+      const results = await searchByTags(parseTagQuery(query));
+      setVisibleImages(results);
+      setNotice(
+        results.length ? "Search completed." : "No matching images found.",
+      );
+    } catch {
+      setNotice("Tag search failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDelete(imageID: string) {
+    setLoading(true);
+    try {
+      await deleteImage(imageID);
+      await loadImages();
+      setNotice("Image deleted.");
+    } catch {
+      setNotice("Delete failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSaveTags(image: AlbumImage) {
+    setLoading(true);
+    try {
+      await updateTags(image);
+      setSelectedImage(null);
+      await loadImages();
+      setNotice("Tags updated.");
+    } catch {
+      setNotice(
+        "Could not update tags. Empty tag names are ignored; please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="app-shell">
+      <header className="topbar">
+        <div>
+          <span className="eyebrow">Object Detect Album</span>
+          <h1>AI-powered photo tagging</h1>
+        </div>
+        <div className="topbar-actions">
+          <span className="usage-pill">{imageCountLabel}</span>
+          <button className="ghost" onClick={onLogout}>
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <section className="control-panel">
+        <div>
+          <h2>Upload, tag, search.</h2>
+          <p>
+            Images are stored in S3, processed by YOLO in Lambda Container
+            Images, and indexed in DynamoDB for tag and image-based search.
+          </p>
+        </div>
+        <div className="button-row">
+          <input
+            ref={uploadInputRef}
+            className="hidden-input"
+            type="file"
+            accept="image/png,image/jpeg"
+            onChange={(event) => void handleUpload(event.target.files?.[0])}
+          />
+          <button
+            className="primary"
+            onClick={() => uploadInputRef.current?.click()}
+          >
+            Upload Photo
+          </button>
+          <input
+            ref={similarInputRef}
+            className="hidden-input"
+            type="file"
+            accept="image/png,image/jpeg"
+            onChange={(event) =>
+              void handleFindSimilar(event.target.files?.[0])
+            }
+          />
+          <button
+            className="secondary"
+            onClick={() => similarInputRef.current?.click()}
+          >
+            Find Similar by Image
+          </button>
+        </div>
+      </section>
+
+      <section className="search-panel">
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") void handleTagSearch();
+          }}
+          placeholder="Search by tag, e.g. dog:1,bottle:1"
+        />
+        <button className="secondary" onClick={() => void handleTagSearch()}>
+          Search Tags
+        </button>
+        <button
+          className="ghost"
+          onClick={() => {
+            setQuery("");
+            setVisibleImages(images);
+          }}
+        >
+          Reset
+        </button>
+      </section>
+
+      {notice && <p className="notice">{notice}</p>}
+      {loading && <p className="loading">Processing...</p>}
+
+      {!loading && images.length === 0 ? (
+        <EmptyState onUpload={() => uploadInputRef.current?.click()} />
+      ) : (
+        <section className="gallery-grid">
+          {visibleImages.map((image) => (
+            <article className="image-card" key={image.imageID}>
+              <img src={image.link} alt="Album item" />
+              <div className="card-body">
+                <div className="tag-list">
+                  {(image.tags || []).map((tag, index) => {
+                    const name = Object.keys(tag)[0];
+                    return (
+                      <span key={`${name}-${index}`}>
+                        {name || "untagged"} · {tag[name]}
+                      </span>
+                    );
+                  })}
+                </div>
+                <div className="card-actions">
+                  <button
+                    className="ghost"
+                    onClick={() => setSelectedImage(image)}
+                  >
+                    Edit tags
+                  </button>
+                  <button
+                    className="danger ghost"
+                    onClick={() => void handleDelete(image.imageID)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </section>
+      )}
+
+      {selectedImage && (
+        <TagEditor
+          image={selectedImage}
+          onClose={() => setSelectedImage(null)}
+          onSave={(image) => void handleSaveTags(image)}
+        />
+      )}
+    </main>
+  );
+}
+
+function App() {
+  const [authenticated, setAuthenticated] = useState(() =>
+    Boolean(getAccessToken()),
+  );
+
+  useEffect(() => {
+    if (parseCognitoCallback()) {
+      setAuthenticated(true);
+    }
+  }, []);
+
+  if (!authenticated) {
+    return <AuthPanel onAuthenticated={() => setAuthenticated(true)} />;
+  }
+
+  return (
+    <AlbumPage
+      onLogout={() => {
+        clearSession();
+        setAuthenticated(false);
+      }}
+    />
+  );
+}
+
+export default App;
